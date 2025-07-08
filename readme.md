@@ -146,15 +146,8 @@ HTTP status codes
 | `File too large` (HTTP 400)     | Default limit is 10 MB → change `MAX_FILE_MB` in `utils.py`. |
 | Blank / poor OCR results        | Scan quality; try 300 DPI, straighten image, or enhance pre-processing. |
 
----
 
-## 8.  Next steps for production
 
-* Ensemble doc-type classifier (vision + text) with confidence scores.  
-* High-recall field extraction (LayoutLM-v3, Donut, GPT-4o, Claude 3, etc.).  
-* DB + object storage (S3) + job queue.  
-* AuthN/AuthZ, TLS, rate limiting, audit logs, PII redaction.  
-* Unit/integration tests, CI/CD, Docker/K8s deployment.  
 
 ---
 
