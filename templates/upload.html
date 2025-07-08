@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DocuVision: Document Classifier & Extractor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #eaf6fb 0%, #c9e7fa 100%);
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 470px;
+            background: #fff;
+            margin: 48px auto 0 auto;
+            padding: 35px 33px 30px 33px;
+            border-radius: 17px;
+            box-shadow: 0 6px 22px 0 rgba(88,134,166,0.14);
+        }
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: -webkit-linear-gradient(45deg, #0053b8 40%, #49c5d2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        h3 {
+            text-align: center;
+            color: #277bb7;
+            margin-top: 8px;
+            font-size: 1.22rem;
+            font-weight: 500;
+        }
+        .desc {
+            color: #547ca5;
+            text-align: center;
+            margin-bottom: 28px;
+            font-size: 1rem;
+        }
+        form {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 9px;
+            background: #f7faff;
+            box-shadow: 0 1px 8px rgba(76,144,209,0.06);
+        }
+        input[type="file"] {
+            background: #fff;
+            padding: 12px 8px;
+            border-radius: 7px;
+            font-size: 1rem;
+            border: 1px solid #cbe1ef;
+            display: block;
+            width: 96%;
+            margin: 8px auto 18px auto;
+        }
+        button {
+            background: linear-gradient(90deg,#2166b7 0%, #54c7e1 100%);
+            color: #fff;
+            font-weight: 700;
+            border-radius: 5px;
+            border: none;
+            padding: 12px 34px;
+            font-size: 1.05rem;
+            box-shadow: 0 2px 12px #d3dfeb53;
+            cursor: pointer;
+            transition: background 0.22s;
+            display: block;
+            margin: 0 auto;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #144183 0%, #3296bc 100%);
+        }
+        .result {
+            background: #f4f9fc;
+            border: 1px solid #e2ecf6;
+            margin-top: 12px;
+            border-radius: 8px;
+            padding: 22px 22px 18px 22px;
+            box-shadow: 0 1px 11px #bdd9f544;
+        }
+        .result .header {
+            color: #1b8aee;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .field-label {
+            color: #144183;
+            font-weight: 600;
+        }
+        .transactions-section {
+            margin-top: 14px;
+        }
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 7px;
+        }
+        .transactions-table th, .transactions-table td {
+            border: 1px solid #b4d6ec;
+            padding: 6px 9px;
+            text-align: left;
+            font-size: 0.99em;
+        }
+        .transactions-table th {
+            background: #f0fbfd;
+            color: #3283b1;
+            font-weight: 600;
+        }
+        .error {
+            color: #c43737;
+            text-align: center;
+            font-size: 1.19em;
+            font-weight: bold;
+            margin: 10px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">DocuVision</div>
+        <h3>Upload and Extract Data from Documents</h3>
+        <div class="desc">
+            Supported: Images & PDF · Aadhar, PAN, Bank Statements & more
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="document" accept=".jpg,.jpeg,.png,.pdf" required>
+            <button type="submit">Upload & Analyze</button>
+        </form>
+       {% if result %}
+<div class="result">
+    {% if result.type == 'Error' %}
+        <div class="error">Error: {{ result.data }}</div>
+    {% else %}
+        <div class="header">Detected Document Type: <span>{{ result.type }}</span></div>
+        {% if result.data %}
+            {% if result.type == "Aadhar Card" %}
+                {% if result.data.Name %}
+                    <div><span class="field-label">Name:</span> <span>{{ result.data.Name }}</span></div>
+                {% endif %}
+                {% if result.data.DOB %}
+                    <div><span class="field-label">DOB:</span> <span>{{ result.data.DOB }}</span></div>
+                {% endif %}
+                {% if result.data['Aadhar Number'] %}
+                    <div><span class="field-label">Aadhar Number:</span> <span>{{ result.data['Aadhar Number'] }}</span></div>
+                {% endif %}
+                {% if result.data.Gender %}
+                    <div><span class="field-label">Gender:</span> <span>{{ result.data.Gender }}</span></div>
+                {% endif %}
+                {% if result.data.Address %}
+                    <div><span class="field-label">Address:</span> <span>{{ result.data.Address }}</span></div>
+                {% endif %}
+            {% elif result.type == "PAN Card" %}
+                {% if result.data.Name %}
+                    <div><span class="field-label">Name:</span> <span>{{ result.data.Name }}</span></div>
+                {% endif %}
+                {% if result.data["Father's Name"] %}
+                    <div><span class="field-label">Father's Name:</span> <span>{{ result.data["Father's Name"] }}</span></div>
+                {% endif %}
+                {% if result.data.DOB %}
+                    <div><span class="field-label">DOB:</span> <span>{{ result.data.DOB }}</span></div>
+                {% endif %}
+                {% if result.data['PAN Number'] %}
+                    <div><span class="field-label">PAN Number:</span> <span>{{ result.data['PAN Number'] }}</span></div>
+                {% endif %}
+            {% elif result.type == "Bank Statement" %}
+                {% if result.data['Bank Name'] %}
+                    <div><span class="field-label">Bank Name:</span> <span>{{ result.data['Bank Name'] }}</span></div>
+                {% endif %}
+                {% if result.data['Account Number'] %}
+                    <div><span class="field-label">Account Number (masked):</span> <span>{{ result.data['Account Number'] }}</span></div>
+                {% endif %}
+                {% if result.data['Account Number (Unmasked)'] %}
+                    <div><span class="field-label">Account Number (unmasked):</span> <span>{{ result.data['Account Number (Unmasked)'] }}</span></div>
+                {% endif %}
+                {% if result.data['Statement Period'] %}
+                    <div><span class="field-label">Statement Period:</span> <span>{{ result.data['Statement Period'] }}</span></div>
+                {% endif %}
+                {% if result.data.Transactions %}
+                    <div class="transactions-section">
+                        <span class="field-label">Transactions:</span>
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for txn in result.data.Transactions %}
+                                    <tr>
+                                        <td>{{ txn.Date }}</td>
+                                        <td>{{ txn.Description }}</td>
+                                        <td>{{ txn.Amount }}</td>
+                                        <td>{{ txn.Type }}</td>
+                                        <td>{{ txn.Balance }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <span style="color:#a26915;font-weight:600;">No matching data found for this type.</span>
+        {% endif %}
+    {% endif %}
+</div>
+{% endif %}
+    </div>
+</body>
+</html>

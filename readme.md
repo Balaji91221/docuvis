@@ -1,159 +1,116 @@
-# DocuVision – Mini-PoC  
-Intelligent document-type detection & key–value extraction for  
-• Aadhaar • PAN • Bank statements  
 
-This repository contains a **proof-of-concept** built with Flask, OpenCV and Tesseract.  
-It lets you 1) upload an image/PDF, 2) auto-classify the document, 3) return a JSON payload of the most important fields, plus a web demo page (`/`).
+# DocuVision: Intelligent Document Classifier & Data Extraction
 
-> ⚠️  Accuracy and security are purposely minimal so you can read & extend the code.  
-> For a production-ready service, see the “Next Steps” section.
+**DocuVision** is a web-based tool for uploading common Indian financial/identity documents (such as Aadhar, PAN, and bank statements) as images or PDFs. It auto-detects the document type and extracts key fields into a structured, easy-to-read format—masking sensitive information when appropriate.
 
 ---
 
-## 1.  Features
+## Business/User Summary (for HR/Non-Technical Reviewers)
 
-* Drag-and-drop web UI (HTML/CSS/JS)  
-* REST endpoint `POST /upload` (multipart form)  
-* File validation — JPG / PNG / PDF ≤ 10 MB  
-* Lightweight pre-processing (deskew, denoise, adaptive threshold)  
-* OCR with Tesseract  
-* Keyword-based document-type classifier  
-* Regex-based field extraction  
-  * Aadhaar → name, DOB, gender, number (masked & unmasked)  
-  * PAN     → name, father’s name, DOB, PAN number  
-  * Bank-statement → bank name, account # (masked/unmasked), statement period, basic transaction list  
-* JSON response with truncated raw text for debugging
+**Purpose:**  
+Help HR teams easily collect, check, and record important document information without manual copy-paste or reading errors.
 
----
+**How it works:**  
+- HR or admin uploads a scanned document (photo or PDF) via a website.
+- The system automatically:
+    - Recognizes the type of document (Aadhar, PAN, Bank Statement, etc).
+    - Extracts important details (like name, birthdate, document number, address).
+    - Hides (masks) part of sensitive numbers (e.g., Aadhar number appears as `XXXX XXXX 1234`).
+    - Shows details in a friendly, readable format on the website—no need for an expert!
+- No data is stored—all information is processed only in memory and shown on the current webpage.
 
-## 2.  Folder layout
-
-```
-docuvision/
-├─ app.py            # Flask server
-├─ utils.py          # helpers: preprocessing, OCR, extraction
-├─ requirements.txt  # Python dep’s
-│
-├─ templates/
-│  └─ index.html     # demo UI
-└─ static/
-   └─ style.css
-```
-
-Uploaded files are stored in `uploads/` (auto-created).
+**Benefits:**
+- No manual reading or typing from documents.
+- Fewer mistakes and more consistency.
+- Candidate information stays private (sensitive numbers masked, no data is saved).
+- Works with scans or photos in common formats.
 
 ---
 
-## 3.  Prerequisites
+## Demo
+![alt text](image.png)
 
-| Component         | Windows 10/11                           | macOS / Linux              |
-|-------------------|-----------------------------------------|----------------------------|
-| Python ≥ 3.9      | https://python.org                      | via package manager        |
-| **Tesseract OCR** | `winget install UB-Mannheim.Tesseract-OCR` <br>or download EXE from UB-Mannheim | `brew install tesseract` / `apt install tesseract-ocr` |
-| **Poppler** (PDF) | `winget install Poppler.Poppler` or zip → PATH | `brew install poppler` / `apt install poppler-utils` |
+## Technical Approach
 
-> If you skip Poppler you can still process images, but not PDFs.
+**How it works (Behind the scenes):**
+1. **Document Upload:**  
+   User uploads an image (.jpg, .png) or PDF.
 
-After installing, verify:
+2. **OCR Extraction:**  
+   The system uses Tesseract OCR to "read" text from the document.  
+   PDFs are converted page-by-page to images first.
 
-```powershell
-tesseract --version     # must print version info
-pdftoppm  -v            # optional, for PDFs
-```
+3. **Document Type Classification:**  
+   The extracted text is scanned for patterns (like "UIDAI", "Income Tax", or a PAN pattern e.g., `ABCDE1234F`) using keyword and regex matching.
 
-If you don’t want to touch PATH, add inside `utils.py`:
+4. **Data Extraction & Masking:**  
+   - The app uses regular expressions and keywords to find key data (like Name, DOB, document numbers).
+   - Sensitive values (like Aadhar and account numbers) are automatically masked in the results.
 
-```python
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-```
+5. **Result Display:**  
+   All extracted data, including field masking where necessary, is shown on the web interface in a user-friendly, field-by-field format.
 
 ---
 
-## 4.  Setup & Run
+## Getting Started (Technical Setup)
 
+**Requirements:**
+- Python 3.7+
+- [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) (must be installed and added to your system PATH)
+- [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases/) (required for PDF support; add its `bin` directory to PATH)
+
+**Python Dependencies:**
+```
+Flask
+pytesseract
+pdf2image
+Pillow
+```
+Install them running:
 ```bash
-# 1) clone / copy repo
-cd docuvision
-
-# 2) (optional) create venv
-python -m venv venv
-source venv/bin/activate     # Windows: venv\Scripts\activate
-
-# 3) install Python dep’s
 pip install -r requirements.txt
-
-# 4) launch server
-python app.py        # http://localhost:8000
 ```
 
-Open a browser at http://localhost:8000 and test with any supported document.
-
-### CURL test
-
+**Run the App:**
 ```bash
-curl -F "file=@samples/aadhaar.jpg" http://localhost:8000/upload
+python app.py
 ```
+Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/) in your browser.
 
-Expected JSON:
+---
 
-```json
-{
-  "document_type": "AADHAAR",
-  "extracted_fields": {
-    "name": "MOHAN LAL",
-    "aadhaar_number": "1234 5678 9123",
-    "aadhaar_number_masked": "********9123",
-    "dob": "14/09/1982",
-    "gender": "MALE"
-  },
-  "raw_text_snippet": "GOVERNMENT OF INDIA ..."
-}
+## Folder Structure
+
+```
+your_project/
+│ app.py
+│ requirements.txt
+└─ templates/
+     upload.html
 ```
 
 ---
 
-## 5.  API reference (v0)
+## Notes for HR/Admin
 
-| Method | Path    | Description                            |
-|--------|---------|----------------------------------------|
-| GET    | `/`     | Returns demo web page                  |
-| POST   | `/upload` | Multipart form `file=<binary>`. Returns JSON result (above). |
-
-HTTP status codes  
-* 200 OK          – success  
-* 400 Bad Request – validation error (size, type, no file)  
-* 500 Server Error – Tesseract/Poppler missing, etc.
+- **No data is stored:** What you upload is only processed for this session.
+- **Masking by default:** Aadhar and bank account numbers are always hidden except their last digits.
+- **Errors:** If the document is not clear or not supported, the app will tell you.
 
 ---
 
-## 6.  Customisation tips
+## Future Extensions (For Technical Team)
 
-* **Add new doc types** → edit `classify()` & `run_extraction()` in `utils.py`.  
-* **Different masking logic** → tweak `mask_number()` helper.  
-* **Better accuracy** → replace regex with LayoutLM / Donut / LLM prompts.  
-* **Asynchronous jobs** → move long OCR work to Celery/RQ worker.  
-* **Docker** → install Tesseract & Poppler in the image and copy code.  
+- Add other document types or regional languages
+- Integrate with HR database or APIs if needed
+- Deploy on secure company intranet for privacy
 
 ---
 
-## 7.  Common errors
+## FAQ
 
-| Symptom                         | Fix |
-|---------------------------------|-----|
-| `TesseractNotFoundError`        | Install Tesseract, add to PATH, or set `tesseract_cmd`. |
-| `PDFInfoNotInstalledError`      | Install Poppler (pdftoppm). |
-| `File too large` (HTTP 400)     | Default limit is 10 MB → change `MAX_FILE_MB` in `utils.py`. |
-| Blank / poor OCR results        | Scan quality; try 300 DPI, straighten image, or enhance pre-processing. |
-
-
-
-
----
-
-## 9.  Credits
-
-* [Tesseract-OCR](https://github.com/tesseract-ocr/tesseract) – Google / open-source community  
-* UB-Mannheim Windows builds  
-* Poppler – Xpdf / open-source community  
+- **Q: What file types are supported?**  
+  Images (`.jpg`, `.jpeg`, `.png`) and PDFs.
+- **Q: Can I use a phone photo?**  
+  Yes, as long as the image is clear and the text is legible.
 
