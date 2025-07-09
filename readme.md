@@ -5,13 +5,13 @@
 
 ---
 
-## Business/User Summary (for HR/Non-Technical Reviewers)
+## Business/User Summary (Non-Technical Reviewers)
 
 **Purpose:**  
-Help HR teams easily collect, check, and record important document information without manual copy-paste or reading errors.
+Helps admin teams easily collect, check, and record important document information without manual copy-paste or reading errors.
 
 **How it works:**  
-- HR or admin uploads a scanned document (photo or PDF) via a website.
+- User uploads a scanned document (photo or PDF) via a website.
 - The system automatically:
     - Recognizes the type of document (Aadhar, PAN, Bank Statement, etc).
     - Extracts important details (like name, birthdate, document number, address).
