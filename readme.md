@@ -1,116 +1,63 @@
+# DocuVision
 
-# DocuVision: Intelligent Document Classifier & Data Extraction
+**Turn a document image or PDF into a structured field summary.**
 
-**DocuVision** is a web-based tool for uploading common Indian financial/identity documents (such as Aadhar, PAN, and bank statements) as images or PDFs. It auto-detects the document type and extracts key fields into a structured, easy-to-read format—masking sensitive information when appropriate.
+DocuVision is a Flask application that reads uploaded documents with Tesseract OCR, classifies their text using keywords and patterns, and extracts document-specific fields for display.
 
----
+[Demo](#demo) · [Setup](#run-locally) · [Architecture](#architecture) · [Implementation](app.py)
 
-## Business/User Summary (Non-Technical Reviewers)
+## Why this project exists
 
-**Purpose:**  
-Helps admin teams easily collect, check, and record important document information without manual copy-paste or reading errors.
+Copying information from scans is repetitive. This project explores a small, understandable OCR workflow for reviewing common identity and financial documents. It is useful as a learning project and a starting point for testing extraction rules against sample documents.
 
-**How it works:**  
-- User uploads a scanned document (photo or PDF) via a website.
-- The system automatically:
-    - Recognizes the type of document (Aadhar, PAN, Bank Statement, etc).
-    - Extracts important details (like name, birthdate, document number, address).
-    - Hides (masks) part of sensitive numbers (e.g., Aadhar number appears as `XXXX XXXX 1234`).
-    - Shows details in a friendly, readable format on the website—no need for an expert!
-- No data is stored—all information is processed only in memory and shown on the current webpage.
+## Capabilities
 
-**Benefits:**
-- No manual reading or typing from documents.
-- Fewer mistakes and more consistency.
-- Candidate information stays private (sensitive numbers masked, no data is saved).
-- Works with scans or photos in common formats.
+- Accept JPEG, PNG, and PDF uploads.
+- Recognize Aadhaar, PAN, and bank-statement patterns, with an “Others” fallback.
+- Extract fields using regular expressions and document-specific rules.
+- Mask recognized Aadhaar and bank-account numbers in the displayed field results.
 
----
+Classification is rule based; this repository does not implement a trained document classifier or an LLM pipeline. OCR and extraction can miss or misread fields, so review the output against the source document.
 
 ## Demo
-![alt text](image.png)
 
-## Technical Approach
+![DocuVision document-processing interface](image.png)
 
-**How it works (Behind the scenes):**
-1. **Document Upload:**  
-   User uploads an image (.jpg, .png) or PDF.
+## Run locally
 
-2. **OCR Extraction:**  
-   The system uses Tesseract OCR to "read" text from the document.  
-   PDFs are converted page-by-page to images first.
+Install Python, the **Tesseract OCR executable**, and **Poppler** for PDF conversion. Make the native tools available on your system path; Python dependencies alone do not install these executables.
 
-3. **Document Type Classification:**  
-   The extracted text is scanned for patterns (like "UIDAI", "Income Tax", or a PAN pattern e.g., `ABCDE1234F`) using keyword and regex matching.
-
-4. **Data Extraction & Masking:**  
-   - The app uses regular expressions and keywords to find key data (like Name, DOB, document numbers).
-   - Sensitive values (like Aadhar and account numbers) are automatically masked in the results.
-
-5. **Result Display:**  
-   All extracted data, including field masking where necessary, is shown on the web interface in a user-friendly, field-by-field format.
-
----
-
-## Getting Started (Technical Setup)
-
-**Requirements:**
-- Python 3.7+
-- [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) (must be installed and added to your system PATH)
-- [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases/) (required for PDF support; add its `bin` directory to PATH)
-
-**Python Dependencies:**
-```
-Flask
-pytesseract
-pdf2image
-Pillow
-```
-Install them running:
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-**Run the App:**
-```bash
 python app.py
 ```
-Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/) in your browser.
 
----
+On Windows, activate the environment with `.venv\Scripts\activate`. Open `http://127.0.0.1:5000/`, upload a clear sample document, and compare the extracted fields with the original.
 
-## Folder Structure
+The included entry point enables Flask debug mode for local development. It is not a deployment configuration.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  Upload[Image or PDF upload] --> Decode[Pillow or pdf2image]
+  Decode --> OCR[Tesseract OCR]
+  OCR --> Classify[Keyword and pattern classification]
+  Classify --> Extract[Document-specific field extraction]
+  Extract --> Mask[Number masking]
+  Mask --> View[Flask HTML result]
 ```
-your_project/
-│ app.py
-│ requirements.txt
-└─ templates/
-     upload.html
-```
 
----
+The request handler processes uploaded bytes without a database. Display masking applies to extracted fields; it does not redact the original uploaded file.
 
-## Notes for HR/Admin
+| File | Role |
+|---|---|
+| [`app.py`](app.py) | Upload handling, OCR, classification, extraction, and masking |
+| [`templates/upload.html`](templates/upload.html) | Upload form and result presentation |
+| [`requirements.txt`](requirements.txt) | Python dependencies |
 
-- **No data is stored:** What you upload is only processed for this session.
-- **Masking by default:** Aadhar and bank account numbers are always hidden except their last digits.
-- **Errors:** If the document is not clear or not supported, the app will tell you.
+## Extending extraction
 
----
-
-## Future Extensions (For Technical Team)
-
-- Add other document types or regional languages
-- Integrate with HR database or APIs if needed
-- Deploy on secure company intranet for privacy
-
----
-
-## FAQ
-
-- **Q: What file types are supported?**  
-  Images (`.jpg`, `.jpeg`, `.png`) and PDFs.
-- **Q: Can I use a phone photo?**  
-  Yes, as long as the image is clear and the text is legible.
-
+Add a document rule in `classify_doc_type`, then update `extract_fields` for that document type. Use representative sample text to check both successful extraction and missing-field behavior. Prefer synthetic documents for examples and issue reports.
