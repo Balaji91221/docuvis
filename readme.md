@@ -15,7 +15,7 @@ Copying information from scans is repetitive. This project explores a small, und
 - Accept JPEG, PNG, and PDF uploads.
 - Recognize Aadhaar, PAN, and bank-statement patterns, with an “Others” fallback.
 - Extract fields using regular expressions and document-specific rules.
-- Mask recognized Aadhaar and bank-account numbers in the displayed field results.
+- Mask extracted Aadhaar values and provide a helper for bank-account masking.
 
 Classification is rule based; this repository does not implement a trained document classifier or an LLM pipeline. OCR and extraction can miss or misread fields, so review the output against the source document.
 
@@ -25,7 +25,7 @@ Classification is rule based; this repository does not implement a trained docum
 
 ## Run locally
 
-Install Python, the **Tesseract OCR executable**, and **Poppler** for PDF conversion. Make the native tools available on your system path; Python dependencies alone do not install these executables.
+Install Python, the **Tesseract OCR executable**, and **Poppler** for PDF conversion. Python dependencies alone do not install these executables. `app.py` currently assigns a Windows-specific path to `pytesseract.pytesseract.tesseract_cmd`. Change that assignment to your installed executable, or remove it when Tesseract is available on your system path. Configure Poppler for your operating system as well.
 
 ```bash
 python -m venv .venv
@@ -50,7 +50,7 @@ flowchart LR
   Mask --> View[Flask HTML result]
 ```
 
-The request handler processes uploaded bytes without a database. Display masking applies to extracted fields; it does not redact the original uploaded file.
+The request handler processes uploaded bytes without a database. Field masking does not redact the original document, and the current development code prints OCR text to the server console. Bank-account display also needs the extractor and template field names aligned: the current names differ, so those fields are not shown by the template.
 
 | File | Role |
 |---|---|
